@@ -3,19 +3,18 @@ import time
 
 app = Flask(__name__)
 
-# ================= SETTINGS =================
 MASTER_CODE = "AxngelVip"
 
 valid_keys = set()
-
-# tracking
 active_users = {}
+
 total_logins = 0
 
-# ================= HOME =================
+
 @app.route("/")
 def home():
     return "AXNGEL SERVER ONLINE"
+
 
 # ================= LOGIN =================
 @app.route("/login", methods=["POST"])
@@ -23,13 +22,12 @@ def login():
     global total_logins
 
     data = request.json
-    key = data.get("key")
     user_id = data.get("user_id")
+    key = data.get("key")
 
     if not user_id:
         return jsonify({"status": "error", "msg": "missing user_id"})
 
-    # mark user active
     active_users[user_id] = time.time()
     total_logins += 1
 
@@ -41,7 +39,8 @@ def login():
 
     return jsonify({"status": "denied"})
 
-# ================= GENERATE VIP KEYS =================
+
+# ================= GENERATE KEY =================
 @app.route("/generate", methods=["POST"])
 def generate():
     data = request.json
@@ -53,12 +52,13 @@ def generate():
 
     return jsonify({"error": "unauthorized"})
 
-# ================= STATS (for website) =================
+
+# ================= STATS =================
 @app.route("/stats")
 def stats():
-    # remove inactive users after 30 seconds
     now = time.time()
 
+    # remove inactive users (30 sec timeout)
     for user in list(active_users):
         if now - active_users[user] > 30:
             del active_users[user]
@@ -68,6 +68,6 @@ def stats():
         "total_logins": total_logins
     })
 
-# ================= START SERVER =================
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
