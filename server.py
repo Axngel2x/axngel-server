@@ -3,25 +3,26 @@ import time
 
 app = Flask(__name__)
 
+# ===== CONFIG =====
 MASTER_CODE = "AxngelVip"
 
 valid_keys = set()
 active_users = {}
-
 total_logins = 0
 
 
+# ===== HOME =====
 @app.route("/")
 def home():
     return "AXNGEL SERVER ONLINE"
 
 
-# ================= LOGIN =================
+# ===== LOGIN SYSTEM =====
 @app.route("/login", methods=["POST"])
 def login():
     global total_logins
 
-    data = request.json
+    data = request.json or {}
     user_id = data.get("user_id")
     key = data.get("key")
 
@@ -32,28 +33,29 @@ def login():
     total_logins += 1
 
     if key == MASTER_CODE:
-        return jsonify({"status": "admin"})
+        return jsonify({"status": "admin", "msg": "welcome admin"})
 
     if key in valid_keys:
-        return jsonify({"status": "vip"})
+        return jsonify({"status": "vip", "msg": "access granted"})
 
-    return jsonify({"status": "denied"})
+    return jsonify({"status": "denied", "msg": "invalid key"})
 
 
-# ================= GENERATE KEY =================
+# ===== GENERATE VIP KEY =====
 @app.route("/generate", methods=["POST"])
 def generate():
-    data = request.json
+    data = request.json or {}
 
-    if data.get("master") == MASTER_CODE:
-        new_key = "AXG-" + str(int(time.time()))
-        valid_keys.add(new_key)
-        return jsonify({"key": new_key})
+    if data.get("master") != MASTER_CODE:
+        return jsonify({"error": "unauthorized"})
 
-    return jsonify({"error": "unauthorized"})
+    new_key = "AXG-" + str(int(time.time()))
+    valid_keys.add(new_key)
+
+    return jsonify({"key": new_key})
 
 
-# ================= STATS =================
+# ===== STATS =====
 @app.route("/stats")
 def stats():
     now = time.time()
@@ -65,9 +67,11 @@ def stats():
 
     return jsonify({
         "active_users": len(active_users),
-        "total_logins": total_logins
+        "total_logins": total_logins,
+        "valid_keys": len(valid_keys)
     })
 
 
+# ===== RUN SERVER =====
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
